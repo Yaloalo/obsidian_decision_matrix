@@ -1,0 +1,21 @@
+# Obsidian
+.obsidian
+
+# Build output
+main.js
+dist/
+*.js.map
+
+# Dependencies
+node_modules/
+
+# OS / Editor artifacts
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.*

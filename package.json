@@ -1,0 +1,50 @@
+{
+	"name": "obsidian-decision-matrix",
+	"version": "1.0.0",
+	"description": "Compare options with weighted criteria and pros and cons, with rankings saved in Markdown notes.",
+	"main": "main.js",
+	"type": "module",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "node esbuild.config.mjs production",
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"check": "svelte-check --tsconfig ./tsconfig.json && tsc --noEmit",
+		"test": "node scripts/test.mjs",
+		"install:local": "node scripts/install.mjs",
+		"verify:release": "node scripts/verify-release.mjs",
+		"verify:registry": "node scripts/verify-registry.mjs",
+		"release:check": "npm run check && npm test && npm run build && npm run verify:release",
+		"package:release": "npm run release:check && node scripts/package-release.mjs"
+	},
+	"keywords": [
+		"obsidian",
+		"obsidian-plugin",
+		"decision",
+		"matrix",
+		"pros-cons",
+		"productivity"
+	],
+	"author": "Lennart Friebel",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^20.11.0",
+		"esbuild": "^0.21.5",
+		"obsidian": "latest",
+		"svelte": "^5.51.0",
+		"svelte-check": "^4.7.8",
+		"tslib": "^2.6.2",
+		"typescript": "^5.4.5",
+		"yaml": "^2.9.1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Yaloalo/obsidian_decision_matrix.git"
+	},
+	"homepage": "https://github.com/Yaloalo/obsidian_decision_matrix#readme",
+	"bugs": {
+		"url": "https://github.com/Yaloalo/obsidian_decision_matrix/issues"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}
