@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-decision-matrix",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Compare options with weighted criteria and pros and cons, with rankings saved in Markdown notes.",
 	"main": "main.js",
 	"type": "module",
@@ -13,8 +13,9 @@
 		"install:local": "node scripts/install.mjs",
 		"verify:release": "node scripts/verify-release.mjs",
 		"verify:registry": "node scripts/verify-registry.mjs",
-		"release:check": "npm run check && npm test && npm run build && npm run verify:release",
-		"package:release": "npm run release:check && node scripts/package-release.mjs"
+		"release:check": "npm run lint && npm run check && npm test && npm run build && npm run verify:release",
+		"package:release": "npm run release:check && node scripts/package-release.mjs",
+		"lint": "eslint . --max-warnings 0"
 	},
 	"keywords": [
 		"obsidian",
@@ -29,11 +30,14 @@
 	"devDependencies": {
 		"@types/node": "^20.11.0",
 		"esbuild": "^0.21.5",
+		"eslint": "^9.39.5",
+		"eslint-plugin-obsidianmd": "^0.5.1",
 		"obsidian": "latest",
 		"svelte": "^5.51.0",
 		"svelte-check": "^4.7.8",
 		"tslib": "^2.6.2",
 		"typescript": "^5.4.5",
+		"typescript-eslint": "^8.72.2",
 		"yaml": "^2.9.1"
 	},
 	"repository": {
@@ -45,6 +49,6 @@
 		"url": "https://github.com/Yaloalo/obsidian_decision_matrix/issues"
 	},
 	"engines": {
-		"node": ">=22"
+		"node": ">=22.13.0"
 	}
 }

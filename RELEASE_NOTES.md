@@ -1,11 +1,11 @@
-Compare alternatives in Obsidian using weighted criteria or weighted pros and cons.
+Compatibility and submission fixes for Decision Matrix.
 
-- Edit options and criteria with sliders and see ranked scores, ties and winners.
-- Keep decisions in vault Markdown notes with readable comparison tables and YAML data.
-- Synchronize changes between the editor, Markdown source and embedded decision blocks.
-- Create and browse decisions from the hub, with a configurable storage folder.
-- Use theme-aware layouts on desktop and mobile.
+- Declare Obsidian 1.7.2 as the minimum version required by the workspace view API.
+- Scan only the configured decisions folder, including its subfolders, when building the hub.
+- Validate saved settings and criterion IDs before using them.
+- Make the decisions-folder setting searchable on Obsidian 1.13+, while keeping the legacy settings UI on older versions.
+- Use the active window's browser crypto API when generating IDs.
+- Remove the redundant plugin ID from the open command and simplify the flagged CSS and regular expression.
+- Add build provenance attestations for all three release assets.
 
-Install the three attached assets in `.obsidian/plugins/decision-matrix/` and enable **Decision Matrix**. The plugin requires Obsidian 1.5.0 or later. Community directory availability depends on Obsidian's review and publication process.
-
-The plugin works offline and does not require an account or payment. Decision data stays in your vault.
+The open command's ID changed from `decision-matrix:open-decision-matrix` to `decision-matrix:open-active`; reassign a custom hotkey if you used the old command. Your notes and stored decision data are unchanged.

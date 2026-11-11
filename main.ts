@@ -1,10 +1,11 @@
 import {
-	ItemView, MarkdownRenderChild, Notice, Plugin, PluginSettingTab, Setting, TFile,
+	ItemView, MarkdownRenderChild, Notice, Plugin, PluginSettingTab, Setting, TFile, TFolder,
 	normalizePath, type App, type ViewStateResult, type WorkspaceLeaf
 } from 'obsidian';
 import { mount, unmount } from 'svelte';
 import DecisionWorkspace from './src/DecisionWorkspace.svelte';
-import { decisionFolder, MarkdownDecisionStore } from './src/markdownStore';
+import { decisionFolder, markdownFilesIn, MarkdownDecisionStore } from './src/markdownStore';
+import { readSettings } from './src/settings';
 import { DEFAULT_SETTINGS, type DecisionPluginSettings } from './src/types';
 
 export const DECISION_VIEW_TYPE = 'decision-matrix-view';
@@ -80,13 +81,12 @@ export default class DecisionMatrixPlugin extends Plugin {
 	readonly embeds = new Set<DecisionEmbed>();
 
 	async onload(): Promise<void> {
-		const saved = await this.loadData();
-		try { this.settings.storageFolder = decisionFolder(saved?.storageFolder ?? DEFAULT_SETTINGS.storageFolder); }
-		catch { this.settings.storageFolder = DEFAULT_SETTINGS.storageFolder; }
+		const saved: unknown = await this.loadData();
+		this.settings = readSettings(saved);
 		this.store = new MarkdownDecisionStore(this.app, this.settings.storageFolder);
 		this.registerView(DECISION_VIEW_TYPE, leaf => new DecisionMatrixItemView(leaf, this));
 		this.addRibbonIcon('scale', 'Open active decision or decision hub', () => { void this.activateView(); });
-		this.addCommand({ id: 'open-decision-matrix', name: 'Open active decision or decision hub', callback: () => { void this.activateView(); } });
+		this.addCommand({ id: 'open-active', name: 'Open active decision or decision hub', callback: () => { void this.activateView(); } });
 		this.addCommand({ id: 'open-decision-hub', name: 'Open decision hub', callback: () => { void this.activateView(null); } });
 		this.addCommand({ id: 'create-decision', name: 'Create new decision', callback: () => { void this.createDecision(); } });
 		this.addSettingTab(new DecisionMatrixSettingTab(this.app, this));
@@ -101,8 +101,8 @@ export default class DecisionMatrixPlugin extends Plugin {
 		}));
 		this.registerEvent(this.app.vault.on('rename', (file, oldPath) => {
 			if (file instanceof TFile) this.store.handleRename(file, oldPath);
-			else for (const child of this.app.vault.getMarkdownFiles()) {
-				if (child.path.startsWith(`${file.path}/`)) this.store.handleRename(child, oldPath + child.path.slice(file.path.length));
+			else if (file instanceof TFolder) for (const child of markdownFilesIn(file)) {
+				this.store.handleRename(child, oldPath + child.path.slice(file.path.length));
 			}
 		}));
 		this.registerMarkdownCodeBlockProcessor('decision', (source, element, context) => {
@@ -169,9 +169,20 @@ export default class DecisionMatrixPlugin extends Plugin {
 
 class DecisionMatrixSettingTab extends PluginSettingTab {
 	constructor(app: App, private plugin: DecisionMatrixPlugin) { super(app, plugin); }
+	// 1.13+ indexes this row for settings search; earlier versions use display().
+	getSettingDefinitions() {
+		return [{
+			name: 'Decisions folder',
+			desc: 'Vault folder for new decisions and the hub. Existing notes stay at their current paths.',
+			render: (setting: Setting) => this.renderFolderSetting(setting)
+		}];
+	}
 	display(): void {
 		this.containerEl.empty();
-		new Setting(this.containerEl)
+		this.renderFolderSetting(new Setting(this.containerEl));
+	}
+	private renderFolderSetting(setting: Setting): void {
+		setting
 			.setName('Decisions folder')
 			.setDesc('Vault folder for new decisions and the hub. Existing notes stay at their current paths.')
 			.addText(text => text.setPlaceholder('decisions').setValue(this.plugin.settings.storageFolder).onChange(value => {

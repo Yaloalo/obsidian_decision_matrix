@@ -1,10 +1,11 @@
 import type { Decision, DecisionOption } from './types';
 
 export function newId(): string {
-	if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+	const crypto = window.crypto;
+	if (crypto.randomUUID) return crypto.randomUUID();
 	// Older mobile WebViews may expose getRandomValues without randomUUID.
 	const bytes = new Uint8Array(16);
-	globalThis.crypto.getRandomValues(bytes);
+	crypto.getRandomValues(bytes);
 	return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
@@ -44,6 +45,11 @@ function record(value: unknown): Record<string, unknown> {
 	return value as Record<string, unknown>;
 }
 
+function list(value: unknown): unknown[] {
+	if (!Array.isArray(value)) throw new Error('Criteria, options, pros and cons must be lists.');
+	return value;
+}
+
 function text(value: unknown, label: string): asserts value is string {
 	if (typeof value !== 'string') throw new Error(`${label} must be text.`);
 }
@@ -62,28 +68,31 @@ export function validateDecision(value: unknown): Decision {
 	text(data.createdAt, 'Creation date');
 	if (!data.id || !Number.isFinite(Date.parse(data.createdAt))) throw new Error('Invalid decision ID or creation date.');
 	if (data.mode !== 'matrix' && data.mode !== 'pros-cons') throw new Error('Mode must be matrix or pros-cons.');
-	if (!Array.isArray(data.criteria) || !Array.isArray(data.options)) throw new Error('Criteria and options must be lists.');
+	const criteria = list(data.criteria);
+	const options = list(data.options);
+	const criterionIds: string[] = [];
 	const ids = new Set<string>();
 	function identifier(value: unknown) {
 		text(value, 'ID');
 		if (!/^[\w-]+$/.test(value) || ids.has(value)) throw new Error('Each criterion, option, pro and con needs a unique ID (letters, numbers, hyphens or underscores).');
 		ids.add(value);
 	}
-	for (const value of data.criteria) {
+	for (const value of criteria) {
 		const criterion = record(value);
 		identifier(criterion.id);
+		text(criterion.id, 'Criterion ID');
+		criterionIds.push(criterion.id);
 		text(criterion.name, 'Criterion name');
 		rating(criterion.weight, 10);
 	}
-	for (const value of data.options) {
+	for (const value of options) {
 		const option = record(value);
 		identifier(option.id);
 		text(option.name, 'Option name');
 		const scores = record(option.scores);
-		for (const criterion of data.criteria) rating(scores[criterion.id], 10);
+		for (const id of criterionIds) rating(scores[id], 10);
 		for (const kind of ['pros', 'cons']) {
-			if (!Array.isArray(option[kind])) throw new Error('Pros and cons must be lists.');
-			for (const value of option[kind]) {
+			for (const value of list(option[kind])) {
 				const item = record(value);
 				identifier(item.id);
 				text(item.text, 'Pro/con text');

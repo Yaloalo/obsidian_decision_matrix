@@ -10,13 +10,13 @@ Compare choices using weighted criteria or weighted pros and cons. Decisions are
 
 ## Install from a release
 
-Requires Obsidian 1.5.0 or later. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/Yaloalo/obsidian_decision_matrix/releases/latest). Copy the three files into your vault's `.obsidian/plugins/decision-matrix/` folder, then reload Obsidian and enable **Decision Matrix** under Community plugins. If you use a custom Obsidian configuration folder, use that folder in place of `.obsidian`.
+Requires Obsidian 1.7.2 or later. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/Yaloalo/obsidian_decision_matrix/releases/latest). Copy the three files into your vault's `.obsidian/plugins/decision-matrix/` folder, then reload Obsidian and enable **Decision Matrix** under Community plugins. If you use a custom Obsidian configuration folder, use that folder in place of `.obsidian`.
 
 The GitHub release can be installed manually before community-directory approval. Listing in Obsidian's directory is a separate review process.
 
 ## Build and install locally
 
-Requires Node.js 22+ to build; the installed plugin has no Node.js dependency and supports Obsidian desktop and mobile.
+Requires Node.js 22.13+ to build; the installed plugin has no Node.js dependency and supports Obsidian desktop and mobile.
 
 ```bash
 npm ci
@@ -66,6 +66,7 @@ Malformed decision data displays an error and is not overwritten. If a note chan
 
 ```bash
 npm run dev       # watch and rebuild
+npm run lint      # Obsidian's recommended source and metadata checks
 npm run check     # Svelte and TypeScript diagnostics
 npm test          # scoring, Markdown round-trips, and vault synchronization tests
 npm run build     # production bundle
@@ -75,7 +76,7 @@ Tests use the actual YAML parser with an in-memory Obsidian vault adapter, inclu
 
 ## Privacy
 
-The installed plugin works offline. It makes no network requests, sends no telemetry, requires no account or payment, and stores decision data only in your vault. It does not install or update itself.
+The installed plugin works offline. It makes no network requests, sends no telemetry, requires no account or payment, and stores decision data only in your vault. The hub scans Markdown files only in the configured decisions folder and its subfolders. It does not install or update itself.
 
 The optional `install:local` command is development tooling, runs only when invoked in a terminal, and is excluded from the plugin bundle. It reads Obsidian's application configuration to find the selected vault and copies the build into its configuration folder. Registry verification and GitHub Actions use the network during release preparation; neither runs inside Obsidian.
 

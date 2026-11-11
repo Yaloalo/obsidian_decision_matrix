@@ -24,6 +24,20 @@ export function decisionFolder(value: string): string {
 	return normalizePath(trimmed || 'decisions');
 }
 
+/** Walk only the requested subtree; the decision hub does not scan the whole vault. */
+export function markdownFilesIn(folder: TFolder): TFile[] {
+	const files: TFile[] = [];
+	const pending = [folder];
+	while (pending.length) {
+		const current = pending.pop()!;
+		for (const child of current.children) {
+			if (child instanceof TFolder) pending.push(child);
+			else if (child instanceof TFile && child.extension === 'md') files.push(child);
+		}
+	}
+	return files;
+}
+
 export class MarkdownDecisionStore {
 	private documents = new Map<string, DecisionDocument>();
 	private listeners = new Set<(event: StoreEvent) => void>();
@@ -51,8 +65,8 @@ export class MarkdownDecisionStore {
 	}
 
 	async refresh(): Promise<void> {
-		await Promise.all(this.app.vault.getMarkdownFiles()
-			.filter(file => file.path.startsWith(`${this.folder}/`)).map(file => this.read(file.path)));
+		const folder = this.app.vault.getAbstractFileByPath(this.folder);
+		if (folder instanceof TFolder) await Promise.all(markdownFilesIn(folder).map(file => this.read(file.path)));
 		this.emit({ kind: 'change', path: '' });
 	}
 

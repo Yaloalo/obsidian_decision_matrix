@@ -5,13 +5,13 @@ Repository: https://github.com/Yaloalo/obsidian_decision_matrix
 - Plugin ID: `decision-matrix`
 - Display name: `Decision Matrix`
 - First release tag: `1.0.0` (no `v` prefix)
-- Minimum Obsidian version: `1.5.0`
+- Minimum Obsidian version: `1.7.2`
 - Platforms: desktop and mobile (the runtime bundle uses only the Obsidian API and browser APIs)
 - License: MIT
 
 ## Validate and package
 
-Use Node.js 22 or later:
+Use Node.js 22.13 or later:
 
 ```bash
 npm ci
@@ -19,7 +19,7 @@ npm run package:release
 npm run verify:registry
 ```
 
-`package:release` runs Svelte and TypeScript diagnostics, automated tests, the production build and release validation, then copies the three installable files into `dist/release/`. Validation checks manifest fields, matching package/lockfile/compatibility versions, release-tag format, license notices, and that no Node.js or developer tooling dependencies appear in the mobile runtime bundle.
+`package:release` runs Obsidian's recommended ESLint rules with zero warnings allowed, Svelte and TypeScript diagnostics, automated tests, the production build and release validation, then copies the three installable files into `dist/release/`. Validation checks manifest fields, matching package/lockfile/compatibility versions, release-tag format, license notices, and that no Node.js or developer tooling dependencies appear in the mobile runtime bundle.
 
 `verify:registry` downloads the official Obsidian registry and checks that the chosen ID and display name do not belong to another repository. This command uses the network only during release preparation.
 
@@ -35,7 +35,7 @@ It uses the exact version from `manifest.json` as the release tag and attaches t
 - `manifest.json`
 - `styles.css`
 
-It leaves any existing release untouched. For a correction, increase the version instead of silently replacing published files. A pushed tag must match the manifest version exactly. The workflow needs GitHub Actions enabled and the job's `contents: write` permission; it uses the repository's built-in token and requires no personal token.
+Before uploading, the workflow creates and verifies GitHub build provenance attestations for all three assets. It leaves any existing release untouched. For a correction, increase the version instead of silently replacing published files. A pushed tag must match the manifest version exactly. The workflow needs GitHub Actions enabled, `contents: write`, `id-token: write` and `attestations: write`; it uses the repository's built-in token and requires no personal token.
 
 For the next release, update `RELEASE_NOTES.md`, run `npm version patch` (or `minor`/`major`), then push the commit and generated tag. The version script keeps `manifest.json` and `versions.json` aligned. The release workflow rejects mismatched versions.
 

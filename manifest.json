@@ -1,8 +1,8 @@
 {
 	"id": "decision-matrix",
 	"name": "Decision Matrix",
-	"version": "1.0.0",
-	"minAppVersion": "1.5.0",
+	"version": "1.0.1",
+	"minAppVersion": "1.7.2",
 	"description": "Compare options with weighted criteria and pros and cons, with rankings saved in Markdown notes.",
 	"author": "Lennart Friebel",
 	"authorUrl": "https://github.com/Yaloalo",

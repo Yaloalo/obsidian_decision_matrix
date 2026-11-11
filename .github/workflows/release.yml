@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,6 +33,20 @@ jobs:
       - run: npm ci
       - run: npm run package:release
       - run: npm run verify:registry
+      - name: Attest release assets
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            dist/release/main.js
+            dist/release/manifest.json
+            dist/release/styles.css
+      - name: Verify release attestations
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh attestation verify dist/release/main.js --repo "$GITHUB_REPOSITORY"
+          gh attestation verify dist/release/manifest.json --repo "$GITHUB_REPOSITORY"
+          gh attestation verify dist/release/styles.css --repo "$GITHUB_REPOSITORY"
       - name: Publish exact-version release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

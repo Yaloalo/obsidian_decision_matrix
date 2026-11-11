@@ -14,7 +14,7 @@ const marker = /<!-- dm:([\w-]+) -->/;
 function escape(value: string): string {
 	return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 		.replace(/\|/g, '&#124;').replace(/\r?\n/g, '&#10;')
-		.replace(/[*_`\[\]\\]/g, char => `&#${char.charCodeAt(0)};`);
+		.replace(/[*_`[\]\\]/g, char => `&#${char.charCodeAt(0)};`);
 }
 
 function unescape(value: string): string {

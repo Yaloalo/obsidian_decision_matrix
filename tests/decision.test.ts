@@ -9,6 +9,7 @@ import { createDecision, cloneDecision, matrixScore, netScore, rankOptions, vali
 import { isDecisionNote, readDecisionNote, renderDecisionBody, writeDecisionNote } from '../src/markdown';
 import { decisionFolder, MarkdownDecisionStore } from '../src/markdownStore';
 import { TFile, TFolder } from './obsidianMock';
+import { readSettings } from '../src/settings';
 import type { App } from 'obsidian';
 
 const codec = { parse, stringify };
@@ -32,12 +33,18 @@ class Vault {
 	contents = new Map<string, string>();
 	beforeProcess?: () => Promise<void>;
 	writes = 0;
+	reads: string[] = [];
 	getAbstractFileByPath(path: string) { return this.files.get(path) ?? null; }
 	getMarkdownFiles() { return [...this.files.values()].filter((file): file is TFile => file instanceof TFile && file.extension === 'md'); }
-	async read(file: TFile) { const content = this.contents.get(file.path); if (content === undefined) throw Error('Missing file'); return content; }
-	async createFolder(path: string) { const folder = new TFolder(path); this.files.set(path, folder); return folder; }
+	async read(file: TFile) { this.reads.push(file.path); const content = this.contents.get(file.path); if (content === undefined) throw Error('Missing file'); return content; }
+	private add(file: TFile | TFolder) {
+		this.files.set(file.path, file);
+		const parent = this.files.get(file.path.slice(0, file.path.lastIndexOf('/')));
+		if (parent instanceof TFolder) parent.children.push(file);
+	}
+	async createFolder(path: string) { const folder = new TFolder(path); this.add(folder); return folder; }
 	async create(path: string, content: string) {
-		assert(!this.files.has(path)); const file = new TFile(path); this.files.set(path, file); this.contents.set(path, content); return file;
+		assert(!this.files.has(path)); const file = new TFile(path); this.add(file); this.contents.set(path, content); return file;
 	}
 	async process(file: TFile, update: (source: string) => string) {
 		await this.beforeProcess?.();
@@ -333,4 +340,25 @@ test('generates unique valid IDs on mobile WebViews without randomUUID', async (
 		if (descriptor) Object.defineProperty(globalThis.crypto, 'randomUUID', descriptor);
 		else delete (globalThis.crypto as unknown as Record<string, unknown>).randomUUID;
 	}
+});
+
+test('validates saved settings without trusting unknown JSON shapes', () => {
+	for (const value of [undefined, null, [], 'bad', 42, { storageFolder: 5 }, { storageFolder: '../outside' }]) {
+		assert.deepEqual(readSettings(value), { storageFolder: 'decisions' });
+	}
+	assert.deepEqual(readSettings({ storageFolder: '/personal//decisions/' }), { storageFolder: 'personal/decisions' });
+});
+
+test('refresh reads only Markdown decisions within the configured folder subtree', async () => {
+	const { vault, store } = setup();
+	await vault.createFolder('decisions');
+	await vault.createFolder('decisions/nested');
+	await vault.createFolder('private');
+	await vault.create('private/unrelated.md', writeDecisionNote('', fixture(), codec));
+	await vault.create('decisions/a.md', writeDecisionNote('', fixture(), codec));
+	await vault.create('decisions/nested/b.md', writeDecisionNote('', fixture(), codec));
+	await vault.create('decisions/image.png', 'not Markdown');
+	await store.refresh();
+	assert.deepEqual(vault.reads.sort(), ['decisions/a.md', 'decisions/nested/b.md']);
+	assert.equal(store.list().length, 2);
 });
